@@ -25,6 +25,7 @@
 </template>
 <script>
 import { Auth } from 'aws-amplify';
+import { useAuthentication } from '../../store/Auth.js';
 export default {
     data() {
         return {
@@ -36,6 +37,7 @@ export default {
             confirmsignupUsername: '',
             confirmsignupCode: '',
             isConfirmSignup: false,
+            AuthStore : useAuthentication(),
 
         }
     },
@@ -78,12 +80,14 @@ export default {
             }
         },
         async signIn() {
-            try{
-                const user = await Auth.signIn(this.loginUsername, this.loginPassword);
-                console.log(user);
-            }catch(error){
-                console.log(error);
-            }
+            // try{
+            //     const user = await Auth.signIn(this.loginUsername, this.loginPassword);
+            //     await this.AuthStore.checkAuthentication();
+            //     console.log(user);
+            // }catch(error){
+            //     console.log(error);
+            // }
+            this.AuthStore.signIn(this.loginUsername,this.loginPassword);
         },
         async signOut() {
             const user = await Auth.signOut();
