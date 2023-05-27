@@ -48,18 +48,16 @@ export default {
       return this.AuthStore.isLoading;
     }
   },
-  mounted() {
-    console.log(this.TodoStore.getTodos);
-  },
   async created() {
-    this.isLoading = true;
+    this.AuthStore.setLoading(true);
     await this.AuthStore.checkAuthentication();
-    this.isLoading = false;
+    this.AuthStore.setLoading(false);
   }
 }
 </script>
-<style>
+<style >
 * {
+  box-sizing: content-box;
   padding: 0;
   margin: 0;
 }
