@@ -25,6 +25,7 @@
                         v-model="confirmsignupCode">
                     <p class="alertCode" v-if="falseCode">Wrong Verification Code try Again</p>
                     <button @click="confirmSignup">Confirm Signup</button>
+                    <button @click="resendVerificationCode">Resend Verification Code</button>
                 </div>
                 <div v-else>
                     <label for="chk" aria-hidden="true">Enter Username</label>
@@ -75,14 +76,22 @@ export default {
         }
     },
     methods: {
+        async resendVerificationCode() {
+            try {
+                await Auth.resendSignUp(this.confirmsignupUsername);
+                console.log('code resent successfully');
+            } catch (err) {
+                console.log('error resending code: ', err);
+            }
+        },
         async forgotUserVerifyCode() {
-            try{
+            try {
                 const user = await Auth.forgotPasswordSubmit(this.forgotPassUsername, this.forgotPassCode, this.forgotPassNewPassword);
                 this.isforgotPassword = false,
-                this.fogotVerificationSent = false,
-                console.log(user);
+                    this.fogotVerificationSent = false,
+                    console.log(user);
             }
-            catch(e){
+            catch (e) {
                 console.log(e)
             }
         },
