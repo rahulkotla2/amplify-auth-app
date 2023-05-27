@@ -12,16 +12,14 @@ export const useAuthentication = defineStore('auth', {
         async checkAuthentication() {
             this.isLoading = true;
             try {
-                const userData = await Auth.currentUserInfo();
-                if (Object.keys(userData).length) {
-                    this.isAuthenticated = true;
-                    console.log(Object.keys(userData))
-                    this.isLoading = false;
-                }
-                console.log(userData, 'Auth Data');
+                // const userData = 
+                await Auth.currentAuthenticatedUser();
+                this.isAuthenticated = true;
+                this.isLoading = false;
             } catch (e) {
                 this.isAuthenticated = false;
                 this.isLoading = false;
+                console.log(e);
             }
         }, async signIn(username, password) {
             this.isLoading = true;
@@ -41,5 +39,9 @@ export const useAuthentication = defineStore('auth', {
             await this.checkAuthentication();
             console.log(user);
         },
+        setLoading(value) {
+            this.isLoading = value;
+        }
+
     }
 })
