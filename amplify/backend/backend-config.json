@@ -1,4 +1,22 @@
 {
+  "api": {
+    "amplifyauthapp": {
+      "dependsOn": [],
+      "output": {
+        "authConfig": {
+          "additionalAuthenticationProviders": [],
+          "defaultAuthentication": {
+            "apiKeyConfig": {
+              "apiKeyExpirationDays": 7
+            },
+            "authenticationType": "API_KEY"
+          }
+        }
+      },
+      "providerPlugin": "awscloudformation",
+      "service": "AppSync"
+    }
+  },
   "auth": {
     "amplifyauthapp4d491d3b": {
       "customAuth": false,
@@ -15,7 +33,9 @@
         "signupAttributes": [
           "EMAIL"
         ],
-        "socialProviders": [],
+        "socialProviders": [
+          "GOOGLE"
+        ],
         "usernameAttributes": [],
         "verificationMechanisms": [
           "EMAIL"
