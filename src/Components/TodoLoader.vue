@@ -73,9 +73,6 @@
     }
 }
 
-/**
- * Attempt to center the whole thing!
- */
 html,
 body {
     height: 100%;
