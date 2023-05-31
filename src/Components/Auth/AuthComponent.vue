@@ -2,53 +2,64 @@
     <div class="content">
         <div class="main">
             <input type="checkbox" id="chk" aria-hidden="true">
-            <div class="signup" v-if="!(isConfirmSignup || isforgotPassword)">
-                <label class="signupLabel" for="chk" aria-hidden="true">Sign up</label>
-                <google-signup @click="federatedSignin"></google-signup>
-                <input class="input" type="text" name="txt" placeholder="User name" required="" v-model="signupUsername">
-                <input class="input" type="email" name="email" placeholder="Email" required="" v-model="signupEmail">
-                <input class="input" type="password" name="pswd" placeholder="Password" required=""
-                    v-model="signupPassword">
-                <button @click="signup">Sign up</button>
-            </div>
-            <div class="login" v-if="!(isConfirmSignup || isforgotPassword)">
-                <label for="chk" aria-hidden="true">Login</label>
-                <input class="input" type="txt" name="txt" placeholder="Email" required="" v-model="loginUsername">
-                <input class="input" type="password" name="pswd" placeholder="Password" required="" v-model="loginPassword">
-                <button @click="signIn">Login</button>
-                <button class="forgotPass" @click="forgotPassword">forgot password</button>
-            </div>
-            <div class="signup" v-if="(isConfirmSignup || isforgotPassword)">
-                <div v-if="isConfirmSignup">
-                    <label for="chk" aria-hidden="true">Confirm Sign Up</label>
-                    <input class="input" type="text" name="Code" placeholder="Verification Code" required=""
-                        v-model="confirmsignupCode">
-                    <p class="alertCode" v-if="falseCode">Wrong Verification Code try Again</p>
-                    <button @click="confirmSignup">Confirm Signup</button>
-                    <button @click="resendVerificationCode">Resend Verification Code</button>
+            <transition>
+                <div class="signup" v-if="!(isConfirmSignup || isforgotPassword)">
+                    <label class="signupLabel" for="chk" aria-hidden="true">Sign up</label>
+                    <google-signup @click="federatedSignin"></google-signup>
+                    <input class="input" type="text" name="txt" placeholder="User name" required=""
+                        v-model.trim="signupUsername">
+                    <input class="input" type="email" name="email" placeholder="Email" required=""
+                        v-model.trim="signupEmail">
+                    <input class="input" type="password" name="pswd" placeholder="Password" required=""
+                        v-model.trim="signupPassword">
+                    <button @click="signup">Sign up</button>
                 </div>
-                <div v-else>
-                    <label for="chk" aria-hidden="true">Enter Username</label>
-                    <div v-if="!fogotVerificationSent">
-                        <input class="input" type="text" name="Code" placeholder="Enter Username" required=""
-                            v-model="forgotPassUsername">
-                        <button @click="forgotUserSendCode">Send Verification Code</button>
-                    </div>
-                    <div v-else>
-                        <input class="input" type="text" name="Code" placeholder="Enter Verification Code" required=""
-                            v-model="forgotPassCode">
-                        <input class="input" type="password" name="Code" placeholder="Enter New Password" required=""
-                            v-model="forgotPassNewPassword">
-                        <button @click="forgotUserVerifyCode">Confirm Verification Code</button>
-                    </div>
+            </transition>
+            <transition>
+                <div class="login" v-if="!(isConfirmSignup || isforgotPassword)">
+                    <label for="chk" aria-hidden="true">Login</label>
+                    <input class="input" type="txt" name="txt" placeholder="Username" required=""
+                        v-model.trim="loginUsername">
+                    <input class="input" type="password" name="pswd" placeholder="Password" required=""
+                        v-model.trim="loginPassword">
+                    <button @click="signIn">Login</button>
+                    <button class="forgotPass" @click="forgotPassword">forgot password</button>
                 </div>
-            </div>
+            </transition>
+            <transition>
+                <div class="signup" v-if="(isConfirmSignup || isforgotPassword)">
+                    <transition>
+                        <div v-if="isConfirmSignup">
+                            <label for="chk" aria-hidden="true">Confirm Sign Up</label>
+                            <input class="input" type="text" name="Code" placeholder="Verification Code" required=""
+                                v-model.trim="confirmsignupCode">
+                            <p class="alertCode" v-if="falseCode">Wrong Verification Code try Again</p>
+                            <button @click="confirmSignup">Confirm Signup</button>
+                            <button @click="resendVerificationCode">Resend Verification Code</button>
+                        </div>
+                        <div v-else>
+                            <label for="chk" aria-hidden="true">Enter Username</label>
+                            <div v-if="!fogotVerificationSent">
+                                <input class="input" type="text" name="Code" placeholder="Enter Username" required=""
+                                    v-model.trim="forgotPassUsername">
+                                <button @click="forgotUserSendCode">Send Verification Code</button>
+                            </div>
+                            <div v-else>
+                                <input class="input" type="text" name="Code" placeholder="Enter Verification Code"
+                                    required="" v-model.trim="forgotPassCode">
+                                <input class="input" type="password" name="Code" placeholder="Enter New Password"
+                                    required="" v-model.trim="forgotPassNewPassword">
+                                <button @click="forgotUserVerifyCode">Confirm Verification Code</button>
+                            </div>
+                        </div>
+                    </transition>
+                </div>
+            </transition>
         </div>
     </div>
 </template>
 <script>
 import { Auth } from 'aws-amplify';
-// import { CognitoHostedUIIdentityProvider } from '@aws-amplify/auth';
 import { useAuthentication } from '../../store/Auth.js';
 import GoogleSignup from '../SignupCompoenents/GoogleSignup.vue';
 export default {
@@ -86,23 +97,35 @@ export default {
         },
         async forgotUserVerifyCode() {
             try {
+                if (this.forgotPassCode == '' || this.forgotPassNewPassword == '') {
+                    alert('Fields Cannot be Empty');
+                    return
+                }
                 const user = await Auth.forgotPasswordSubmit(this.forgotPassUsername, this.forgotPassCode, this.forgotPassNewPassword);
-                this.isforgotPassword = false,
-                    this.fogotVerificationSent = false,
-                    console.log(user);
+                this.isforgotPassword = false;
+                this.fogotVerificationSent = false;
+                console.log(user);
             }
             catch (e) {
-                console.log(e)
+                console.log(e);
+                alert(e.message);
             }
         },
         async forgotUserSendCode() {
-            const user = await Auth.forgotPassword(this.forgotPassUsername);
-            console.log(user);
-            this.fogotVerificationSent = true;
+            try {
+                if (this.forgotPassUsername == '') {
+                    alert('Fields Cannot be Empty');
+                    return
+                }
+                const user = await Auth.forgotPassword(this.forgotPassUsername);
+                console.log(user);
+                this.fogotVerificationSent = true;
+            } catch (e) {
+                alert(e.message)
+            }
         },
         forgotPassword() {
             this.isforgotPassword = true;
-            // console.log('isforgotPassword', this.isforgotPassword);
         },
         async federatedSignin() {
             console.log(Auth);
@@ -113,6 +136,10 @@ export default {
             const username = this.signupUsername;
             const password = this.signupPassword;
             const email = this.signupEmail;
+            if (username == '' || password == '' || email == '') {
+                alert('Signup fields Cannot be Empty');
+                return
+            }
             console.log(username, password, email);
             try {
                 const { user } = await Auth.signUp({
@@ -127,25 +154,37 @@ export default {
                 this.resetData('signupUsername', 'signupEmail', 'signupPassword');
                 console.log(user);
             } catch (error) {
-                console.log('error signing up:', error);
+                alert(error.message);
             }
         },
         async confirmSignup() {
             try {
+                if (this.confirmsignupCode == '') {
+                    alert('Code Field Cannot be Empty');
+                    return
+                }
                 const result = await Auth.confirmSignUp(this.confirmsignupUsername, this.confirmsignupCode);
-                // const userDetails = await this.AuthStore.checkAuthentication();
-                // await this.signOut();
-                // await this.AuthStore.checkAuthentication();
                 this.isConfirmSignup = false;
                 console.log(result);
+                alert(`User Creation is ${result}`);
 
             } catch (error) {
-                console.log('error confirming sign up', error);
                 this.falseCode = true;
             }
         },
         async signIn() {
-            this.AuthStore.signIn(this.loginUsername, this.loginPassword);
+            try {
+                const username = this.loginUsername;
+                const password = this.loginPassword;
+                if (username == '' || password == '') {
+                    alert('Login fields Cannot be Empty');
+                    return
+                }
+                this.AuthStore.signIn(this.loginUsername, this.loginPassword);
+            }
+            catch (e) {
+                alert(e.message)
+            }
         },
         async signOut() {
             const user = await Auth.signOut();
@@ -288,5 +327,20 @@ button:hover {
 
 #chk:checked~.signup label {
     transform: scale(.6);
+}
+
+.v-enter-from,
+.v-leave-to {
+    opacity: 0;
+}
+
+.v-enter-active,
+.v-leave-active {
+    transition: all 0.5s ease-in-out;
+}
+
+.v-enter-to,
+.v-leave-to {
+    opacity: 1;
 }
 </style>
