@@ -6,14 +6,22 @@ export const useAuthentication = defineStore('auth', {
         return {
             isAuthenticated: false,
             isLoading: false,
+            emailVerified: false,
         }
     },
     actions: {
+        setEmailVerified(value) {
+            this.emailVerified = value;
+        },
+        setMobileVerified(value) {
+            this.mobileVerified = value;
+        },
         async checkAuthentication() {
             this.isLoading = true;
             try {
                 // const userData = 
-                await Auth.currentAuthenticatedUser();
+                const data = await Auth.currentAuthenticatedUser();
+                console.log(data,'current auth user');
                 this.isAuthenticated = true;
                 this.isLoading = false;
             } catch (e) {
@@ -22,22 +30,26 @@ export const useAuthentication = defineStore('auth', {
                 console.log(e);
             }
         }, async signIn(username, password) {
-            this.isLoading = true;
             try {
+                this.isLoading = true;
                 const user = await Auth.signIn(username, password);
                 await this.checkAuthentication();
                 this.isLoading = false;
                 console.log(user);
             } catch (error) {
-                console.log(error);
                 this.isLoading = false;
+                alert(error.message);
             }
         },
         async signOut() {
-            this.isLoading = true;
-            const user = await Auth.signOut();
-            await this.checkAuthentication();
-            console.log(user);
+            try {
+                this.isLoading = true;
+                const user = await Auth.signOut();
+                await this.checkAuthentication();
+                console.log(user);
+            } catch (e) {
+                alert(e.message);
+            }
         },
         setLoading(value) {
             this.isLoading = value;
