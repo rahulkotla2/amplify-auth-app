@@ -1,44 +1,63 @@
 <template>
-    <div class="container">
-        <p class="h1 mb-3 text-center fw-bold">Hello {{ username }}</p>
-        <div class="m-3">
-            <div class="d-flex flex-column col-10 offset-1 col-md-10 offset-md-1 col-lg-8 offset-lg-2 col-xl-6 offset-xl-3">
-                <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon3">Title</span>
-                    <input type="text" class="form-control" id="basic-url" aria-describedby="basic-addon3 basic-addon4"
-                        v-model="title">
+    <transition name="dialog">
+        <div class="container" v-if="!VerifyingEmail">
+            <p class="h1 mb-3 text-center fw-bold">Hello {{ username }}</p>
+            <div class="m-3">
+                <div
+                    class="d-flex flex-column col-10 offset-1 col-md-10 offset-md-1 col-lg-8 offset-lg-2 col-xl-6 offset-xl-3">
+                    <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon3">Title</span>
+                        <input type="text" class="form-control" id="basic-url" aria-describedby="basic-addon3 basic-addon4"
+                            v-model="title">
+                    </div>
+                    <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon3">Desription</span>
+                        <input type="text" class="form-control" id="basic-url" aria-describedby="basic-addon3 basic-addon4"
+                            v-model="description">
+                    </div>
+                    <button type="button" class="btn btn-success" v-if="!isUpdating" @click="createTodo">Add Todo</button>
+                    <button type="button" class="btn btn-success" v-else @click="updateTodo">Update Todo</button>
+                    <todo-loader v-if="isTodoLoading"></todo-loader>
+                    <transition>
+                        <p class="mt-3 text-center" v-if="!isTodoLoading && !todos.length">No Todos Add some to See</p>
+                    </transition>
+                    <transition>
+                        <div class="card mt-5" v-if="!isTodoLoading">
+                            <ul class="list-group list-group-flush">
+                                <li v-for="todo in todos" :key="todo.id"
+                                    class="list-group-item d-flex flex-column flex-md-row align-items-center justify-content-between">
+                                    <span class="fw-bold">{{ todo.title }}</span>
+                                    -
+                                    <span class="col-md-5 col-12 mb-sm-3 mb-md-0">{{ todo.description }}</span>
+                                    <div class="d-flex">
+                                        <button type="button" @click="editTodo(todo.id)" v-if="!(isUpdating == todo.id)"
+                                            class="btn btn-warning me-2">Edit</button>
+                                        <button type="button" @click="cancleUpdate" v-else
+                                            class="btn btn-secondary me-2">Cancle</button>
+                                        <button type="button" class="btn btn-danger"
+                                            @click="deleteTodo(todo.id)">Delete</button>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </transition>
+                    <transition>
+                        <div v-if="!isTodoLoading" class="mt-3 col d-flex justify-content-between">
+                            <button :disabled="AuthStore.emailVerified" @click="sendVerificationCode" class="btn  col-5"
+                                :class="{ 'btn-outline-success': AuthStore.emailVerified, 'btn-outline-warning': !AuthStore.emailVerified }"><span
+                                    v-if="AuthStore.emailVerified">Email Verified</span><span v-else>Verify
+                                    Email</span></button>
+                            <button v-if="!isTodoLoading" @click="AuthStore.signOut"
+                                class="btn btn-outline-primary col-5">SignOut</button>
+                        </div>
+                    </transition>
                 </div>
-                <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon3">Desription</span>
-                    <input type="text" class="form-control" id="basic-url" aria-describedby="basic-addon3 basic-addon4"
-                        v-model="description">
-                </div>
-                <button type="button" class="btn btn-success" v-if="!isUpdating" @click="createTodo">Add Todo</button>
-                <button type="button" class="btn btn-success" v-else @click="updateTodo">Update Todo</button>
-                <todo-loader v-if="isTodoLoading"></todo-loader>
-                <p class="mt-3 text-center" v-if="!isTodoLoading && !todos.length">No Todos Add some to See</p>
-                <div class="card mt-5" v-if="!isTodoLoading">
-                    <ul class="list-group list-group-flush">
-                        <li v-for="todo in todos" :key="todo.id"
-                            class="list-group-item d-flex flex-column flex-md-row align-items-center justify-content-between">
-                            <span class="fw-bold">{{ todo.title }}</span>
-                            -
-                            <span class="col-md-5 col-12 mb-sm-3 mb-md-0">{{ todo.description }}</span>
-                            <div class="d-flex">
-                                <button type="button" @click="editTodo(todo.id)" v-if="!(isUpdating == todo.id)"
-                                    class="btn btn-warning me-2">Edit</button>
-                                <button type="button" @click="cancleUpdate" v-else
-                                    class="btn btn-secondary me-2">Cancle</button>
-                                <button type="button" class="btn btn-danger" @click="deleteTodo(todo.id)">Delete</button>
-                            </div>
-                        </li>
-                    </ul>
-                </div>
-                <button v-if="!isTodoLoading" @click="AuthStore.signOut" class="btn btn-primary mt-3 col-6 offset-3">Sign
-                    Out</button>
             </div>
         </div>
-    </div>
+    </transition>
+    <transition name="dialog">
+        <verify-model v-if="VerifyingEmail" @cancle-model="VerifyingEmail = !VerifyingEmail"></verify-model>
+    </transition>
 </template>
 
 <script>
@@ -65,6 +84,7 @@ export default {
             id: '',
             username: '',
             isTodoLoading: false,
+            VerifyingEmail: false
         }
     },
     computed: {
@@ -73,6 +93,15 @@ export default {
         }
     },
     methods: {
+        async sendVerificationCode() {
+            try {
+                const data = await Auth.verifyCurrentUserAttribute('email');
+                console.log(data);
+                this.VerifyingEmail = true;
+            } catch (e) {
+                alert(e.message);
+            }
+        },
         editTodo(id) {
             this.isUpdating = id;
             const result = this.todos.find((item) => item.id === id);
@@ -88,11 +117,12 @@ export default {
         },
         async createTodo() {
             const { title, description, id } = this;
-            if (!title || !description || !id) return;
+            if (!title || !description || !id) {
+                alert("Todo Fields Can't be Empty,Please Fill them and try again")
+                return;
+            }
             this.isTodoLoading = true;
             const todo = { userTodosId: id, title, description };
-            // this.todos = [...this.todos, todo];
-            // console.log(todo);
             await API.graphql({
                 query: createTodo,
                 variables: { input: todo }
@@ -185,6 +215,12 @@ export default {
             const data = await Auth.currentUserInfo();
             this.username = data.username;
             this.id = data.id;
+            if (data.attributes.email_verified) {
+                this.AuthStore.setEmailVerified(true);
+            }
+            if (data.attributes.phone_number) {
+                this.AuthStore.setMobileVerified(true);
+            }
             const userPresent = await this.checkUserPresent()
             if (!userPresent) {
                 this.createUserIn();
@@ -207,5 +243,33 @@ export default {
 * {
     font-family: 'Merriweather', serif;
 }
-</style>
+
+.v-enter-from {
+    transform: translateY(50px);
+    opacity: 0;
+}
+
+.v-enter-active {
+    transition: all 0.5s ease-in-out;
+}
+
+.v-enter-to {
+    transform: translateY(0px);
+    opacity: 1;
+}
+
+.dialog-enter-from,
+.dialog-leave-to {
+    opacity: 0;
+}
+
+.dialog-enter-active,
+.dialog-leave-active {
+    transition: all 0.3s ease-in;
+}
+
+.dialog-enter-to,
+.dialog-leave-from {
+    opacity: 1;
+}</style>
 
