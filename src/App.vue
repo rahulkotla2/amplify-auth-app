@@ -1,20 +1,13 @@
 <template>
-  <base-loader v-if="isLoading"></base-loader>
-  <auth-component v-else-if="!isAutherized"></auth-component>
-  <list-todo v-else></list-todo>
-
-  <!-- <Authenticator>
-    <template v-slot="{ user, signOut }">
-      <h1>Hello {{ user.username }}!</h1>
-      <button @click="signOut">Sign Out</button>
-    </template>
-  </Authenticator> -->
+  <transition name="home">
+    <base-loader v-if="isLoading"></base-loader>
+    <auth-component v-else-if="!isAutherized"></auth-component>
+    <list-todo v-else></list-todo>
+  </transition>
 </template>
 
 <script>
-// import { Authenticator } from "@aws-amplify/ui-vue";
 import { Auth } from 'aws-amplify';
-// import "@aws-amplify/ui-vue/styles.css";
 import AuthComponent from './Components/Auth/AuthComponent.vue';
 import { useTodoStore } from './store/TodoStore.js';
 import ListTodo from './Components/TodoCRUD/ListTodo.vue';
@@ -22,7 +15,6 @@ import BaseLoader from './Components/BaseLoader.vue'
 import { useAuthentication } from './store/Auth.js';
 export default {
   components: {
-    // Authenticator,
     AuthComponent,
     ListTodo,
     BaseLoader
@@ -60,6 +52,17 @@ export default {
   box-sizing: content-box;
   padding: 0;
   margin: 0;
+}
+.home-enter-from {
+    opacity: 0;
+}
+
+.home-enter-active {
+    transition: all 0.5s ease-in-out;
+}
+
+.home-enter-to {
+    opacity: 1;
 }
 </style>
 
